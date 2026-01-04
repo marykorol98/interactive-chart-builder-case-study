@@ -1,4 +1,4 @@
-# Interactive Chart Builder (Anonymized Portfolio Summary)
+# Interactive Chart Builder (Detailed Description)
 
 This repository contains anonymized, evidence-based documentation of my work on an in-app interactive chart builder feature. The implementation lives in the `plot_methods` package of a core ML library that is used as a dependency by three other services. The chart builder exposes configurable plotting methods that accept `DictDataFrame` inputs (a wrapper around `pandas` data structures) and, in some cases, an ML model instance.
 

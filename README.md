@@ -1,44 +1,88 @@
-# Interactive Chart Builder — Case Study
+# Interactive Chart Builder — Portfolio Case Study (Anonymized)
+
 ## Overview
+I worked on an in-app **interactive chart builder** that lets users configure charts through a GUI and render them in the application. The charting logic lives in a shared ML-core library used as a dependency by three other backend microservices.
 
-This repository presents a **sanitized case study** of an interactive, UI-driven chart builder feature developed for a multi-service platform SMILE.
+---
 
-The feature allows users to **create and configure data visualizations directly within the application** by selecting parameters through a graphical interface.
+## My Role (Scope of Work)
+I focused on two tracks:
+1. **Improving existing plots** (UX/UI tuning, validation, correctness of parameter labels, and sorting behavior).
+2. **Building new plot methods from scratch** to expand the chart catalog.
 
-All materials in this repository are anonymized and intentionally simplified to safely demonstrate the **engineering approach, architecture, and decision-making**, without exposing proprietary or sensitive information.
+---
 
-## Context
+## Project Context
+- **Where the feature lives:** The chart builder is implemented in the `plot_methods` package of an ML-core library, which is then used as a dependency by three other services. 
+- **Data interface:** Plot methods recieve around `pandas` data structures wrapped into a pre-defined `DictDataFrame` class which is used across the services, so I needed to consider its support.
+- **Model-aware charts:** Some plots accept a trained ML model instance to visualize its behavior.
 
-The original feature was developed as part of a **large, multi-service production platform** with multiple data sources and user-facing analytical tools.
+---
 
-The goal was to enable non-technical users to **build custom charts on demand** inside the application, without writing code or relying on preconfigured dashboards.
+## What I Built From Scratch (New Plot Methods)
+All items below are present in `new_plot_methods/` and summarized from code evidence.
 
-## Problem Statement
+1. **BubbleChart**
+   - Scatter plot enhanced with size and color conditioning (optional opacity).
+   - Validates columns and parameter types before plotting. 
 
-Static or pre-built charts were insufficient because:
+2. **DecisionBoundaryDisplay**
+   - 2D decision boundary visualization using a prediction grid plus labeled points.
+   - Enforces non-text feature types and validates class counts
 
-- users needed flexibility to explore data ad hoc
+3. **GeoDataVisualizer**
+   - Map-based visualization for geometry data via Plotly mapbox.
+   - Requires a runtime `boto_handler` and detects geometry columns using `geopandas` types. 
 
-- different teams required different parameter combinations
+4. **TreeGraphVisualizer**
+   - Visualizes decision trees (or a selected estimator in a forest) using Plotly traces. 
+   - Supports `tree_index` selection and `max_depth`.
 
-- maintaining a growing number of predefined charts did not scale
+5. **WindowCorrelationPlot**
+   - Shows Pearson correlation drift between two series across sliding windows.
+   - Highlights low-correlation intervals by threshold.
 
-- incorrect configurations could easily lead to invalid or expensive queries
+6. **SHAP Plot Suite (bar, beeswarm, heatmap, waterfall)**
+   - Implements multiple SHAP visualization types with a shared base class.
+   - Adds sample-level navigation in the waterfall view.
+---
 
-The challenge was to design a solution that balanced **flexibility, usability, and system safety**.
+## Improvements to Existing Plots (Selected Examples)
+The changes below target behavior and UX consistency in legacy plots.
 
-## Solution Overview
+- **SortingMixin:** Added duplicate-index handling and warnings; improved X-axis labeling when falling back to index-based ordering.
+- **Index-to-Values Plot:** Defaulted X-axis naming to the selected sort column; enabled datetime sorting; adjusted line width based on marker size.
+- **Bar Chart:** Expanded datetime support and standardized hover labels.
+- **SHAP Waterfall:** Fixed per-sample base value handling and per-sample slider layout state; sorted features by descending contribution magnitude.
+- **Regression Plot Visibility:** Added guard for feature-only contexts.
 
-The solution was an **in-application interactive chart builder**, implemented as a product feature rather than a standalone visualization component.
+---
 
-Key ideas:
+## Representative Before → After
+These examples demonstrate the impact of the changes:
 
-charts are defined by a **configuration model**, not hardcoded logic
+### 1) Sorting with Duplicate Keys
+- **Before:** Sorting assumed unique values and could lead to confusing X-axis labeling when duplicates existed.
+- **After:** Duplicate-aware sorting with warnings and consistent axis labeling fallback.
 
-users build charts through a guided UI, with validated parameter choices
+### 2) SHAP Waterfall: Base Value + Slider Behavior
+- **Before:** Base values and layout were applied globally, risking mismatch per sample.
+- **After:** Per-sample `base_value` and layout data preserved per slider step, with features sorted by contribution magnitude.
 
-the system translates user configuration into a chart specification and data query
+### 3) Bar Chart Hover Labels + Datetime Support
+- **Before:** Hover labels varied across aggregation modes; datetime columns weren’t accepted as sortable categories.
+- **After:** Standardized hover templates and datetime support for grouping/sorting.
 
-invalid or unsafe configurations are prevented early via validation rules
+---
 
-## User Flow
+## Design Trade-offs
+- **Validation vs. flexibility:** Strong parameter/type checks increase reliability at the cost of stricter inputs.
+- **Performance vs. detail:** Grid/window resolution choices balance computation cost and visual granularity.
+- **Per-sample fidelity vs. code size:** Storing per-sample layout data in SHAP waterfall improves correctness but adds complexity.
+
+---
+
+## Outcomes
+- Broadened the chart catalog with new, model-aware visualization types (decision boundaries, tree graphs, SHAP suite, etc.).
+- Improved reliability and UX of existing plots (sorting, hover labels, parameter handling).
+---
