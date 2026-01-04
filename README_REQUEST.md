@@ -18,7 +18,7 @@ Inputs:
 Output:
 1) generated/README.md
 - Clearly separate work built from scratch vs transformed legacy
-- Include sections: "What is intentionally omitted" and write there why you omitted smth
+- Write what is intentionally omitted and why in the generated/EVIDENCE_MAP.md
 
 2) generated/article.md
 - 2–4 pages equivalent
